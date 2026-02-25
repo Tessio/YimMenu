@@ -1,18 +1,24 @@
 {
   "name": "yimmenu-auth",
-  "version": "1.0.0",
-  "description": "YimMenu Authentication System",
+  "version": "2.0.0",
+  "description": "YimMenu Authentication System - Enhanced Security",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "setup": "node scripts/init-database.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "pg": "^8.11.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "crypto-js": "^4.1.1"
+    "crypto-js": "^4.1.1",
+    "bcrypt": "^5.1.1",
+    "joi": "^17.11.0",
+    "express-rate-limit": "^7.1.5",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
