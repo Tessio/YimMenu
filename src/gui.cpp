@@ -1,5 +1,6 @@
 #include "gui.hpp"
 
+#include "services/auth/auth_service.hpp"
 #include "lua/lua_manager.hpp"
 #include "natives.hpp"
 #include "renderer/renderer.hpp"
@@ -26,10 +27,12 @@ namespace big
 
 		// high priority
 		INFO_OVERLAY = 0x2000,
-		CMD_EXECUTOR,
 
-		GTA_DATA_CACHE = 0x3000,
-		ONBOARDING,
+		// Orden modificado: 3 -> 4 -> 1 -> 2 -> 5 -> 6 -> 7 -> 8
+		GTA_DATA_CACHE = 0x2500,      // 3 - Primero
+		CMD_EXECUTOR = 0x2600,        // 4 - Segundo
+		AUTH = 0x2700,                // 1 - Tercero
+		ONBOARDING = 0x2800,          // 2 - Cuarto
 
 		// should remain in a league of its own
 		NOTIFICATIONS = 0x4000,
@@ -40,9 +43,10 @@ namespace big
 	    m_override_mouse(false)
 	{
 		g_renderer.add_dx_callback(view::notifications, eRenderPriority::NOTIFICATIONS);
-		g_renderer.add_dx_callback(view::onboarding, eRenderPriority::ONBOARDING);
-		g_renderer.add_dx_callback(view::gta_data, eRenderPriority::GTA_DATA_CACHE);
-		g_renderer.add_dx_callback(view::cmd_executor, eRenderPriority::CMD_EXECUTOR);
+		g_renderer.add_dx_callback(view::gta_data, eRenderPriority::GTA_DATA_CACHE);     // 3 - Primero
+		g_renderer.add_dx_callback(view::cmd_executor, eRenderPriority::CMD_EXECUTOR);   // 4 - Segundo
+		g_renderer.add_dx_callback(view::auth, eRenderPriority::AUTH);                   // 1 - Tercero
+		g_renderer.add_dx_callback(view::onboarding, eRenderPriority::ONBOARDING);       // 2 - Cuarto
 		g_renderer.add_dx_callback(view::overlay, eRenderPriority::INFO_OVERLAY);
 
 		g_renderer.add_dx_callback(view::vehicle_control, eRenderPriority::VEHICLE_CONTROL);
@@ -107,10 +111,11 @@ namespace big
 
 	void gui::dx_init()
 	{
-		static auto bgColor     = ImVec4(0.09f, 0.094f, 0.129f, .9f);
-		static auto primary     = ImVec4(0.172f, 0.380f, 0.909f, 1.f);
-		static auto secondary   = ImVec4(0.443f, 0.654f, 0.819f, 1.f);
-		static auto whiteBroken = ImVec4(0.792f, 0.784f, 0.827f, 1.f);
+		// Colores morado y rosa para SerchoScript
+		static auto bgColor     = ImVec4(0.15f, 0.05f, 0.25f, 0.95f);  // Morado oscuro
+		static auto primary     = ImVec4(0.75f, 0.25f, 0.75f, 1.f);    // Rosa fuerte
+		static auto secondary   = ImVec4(0.50f, 0.15f, 0.60f, 1.f);    // Morado medio
+		static auto accent      = ImVec4(1.0f, 0.4f, 1.0f, 1.f);       // Rosa brillante
 
 		auto& style             = ImGui::GetStyle();
 		style.WindowPadding     = ImVec2(15, 15);
@@ -128,52 +133,62 @@ namespace big
 		style.ChildRounding     = 4.0f;
 
 		auto& colors                          = style.Colors;
-		colors[ImGuiCol_Text]                 = ImGui::ColorConvertU32ToFloat4(g.window.text_color);
-		colors[ImGuiCol_TextDisabled]         = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-		colors[ImGuiCol_WindowBg]             = ImGui::ColorConvertU32ToFloat4(g.window.background_color);
-		colors[ImGuiCol_ChildBg]              = ImGui::ColorConvertU32ToFloat4(g.window.background_color);
-		colors[ImGuiCol_PopupBg]              = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
-		colors[ImGuiCol_Border]               = ImVec4(0.80f, 0.80f, 0.83f, 0.88f);
-		colors[ImGuiCol_BorderShadow]         = ImVec4(0.92f, 0.91f, 0.88f, 0.00f);
-		colors[ImGuiCol_FrameBg]              = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-		colors[ImGuiCol_FrameBgHovered]       = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-		colors[ImGuiCol_FrameBgActive]        = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-		colors[ImGuiCol_TitleBg]              = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-		colors[ImGuiCol_TitleBgCollapsed]     = ImVec4(1.00f, 0.98f, 0.95f, 0.75f);
-		colors[ImGuiCol_TitleBgActive]        = ImVec4(0.07f, 0.07f, 0.09f, 1.00f);
-		colors[ImGuiCol_MenuBarBg]            = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-		colors[ImGuiCol_ScrollbarBg]          = ImVec4(0.10f, 0.09f, 0.12f, 1.00f);
-		colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
-		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-		colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-		colors[ImGuiCol_CheckMark]            = ImVec4(1.00f, 0.98f, 0.95f, 0.61f);
-		colors[ImGuiCol_SliderGrab]           = ImVec4(0.80f, 0.80f, 0.83f, 0.31f);
-		colors[ImGuiCol_SliderGrabActive]     = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-		colors[ImGuiCol_Button]               = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-		colors[ImGuiCol_ButtonHovered]        = ImVec4(0.24f, 0.23f, 0.29f, 1.00f);
-		colors[ImGuiCol_ButtonActive]         = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-		colors[ImGuiCol_Header]               = ImVec4(0.30f, 0.29f, 0.32f, 1.00f);
-		colors[ImGuiCol_HeaderHovered]        = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-		colors[ImGuiCol_HeaderActive]         = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-		colors[ImGuiCol_ResizeGrip]           = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-		colors[ImGuiCol_ResizeGripHovered]    = ImVec4(0.56f, 0.56f, 0.58f, 1.00f);
-		colors[ImGuiCol_ResizeGripActive]     = ImVec4(0.06f, 0.05f, 0.07f, 1.00f);
-		colors[ImGuiCol_PlotLines]            = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
-		colors[ImGuiCol_PlotLinesHovered]     = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-		colors[ImGuiCol_PlotHistogram]        = ImVec4(0.40f, 0.39f, 0.38f, 0.63f);
-		colors[ImGuiCol_PlotHistogramHovered] = ImVec4(0.25f, 1.00f, 0.00f, 1.00f);
-		colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.25f, 1.00f, 0.00f, 0.43f);
+		colors[ImGuiCol_Text]                 = ImVec4(1.0f, 0.9f, 1.0f, 1.00f);
+		colors[ImGuiCol_TextDisabled]         = ImVec4(0.6f, 0.4f, 0.6f, 1.00f);
+		colors[ImGuiCol_WindowBg]             = ImVec4(0.12f, 0.05f, 0.18f, 0.95f);
+		colors[ImGuiCol_ChildBg]              = ImVec4(0.10f, 0.03f, 0.15f, 0.90f);
+		colors[ImGuiCol_PopupBg]              = ImVec4(0.12f, 0.05f, 0.18f, 0.95f);
+		colors[ImGuiCol_Border]               = ImVec4(0.75f, 0.25f, 0.75f, 0.50f);
+		colors[ImGuiCol_BorderShadow]         = ImVec4(0.0f, 0.0f, 0.0f, 0.00f);
+		colors[ImGuiCol_FrameBg]              = ImVec4(0.20f, 0.08f, 0.25f, 1.00f);
+		colors[ImGuiCol_FrameBgHovered]       = ImVec4(0.35f, 0.12f, 0.40f, 1.00f);
+		colors[ImGuiCol_FrameBgActive]        = ImVec4(0.50f, 0.15f, 0.55f, 1.00f);
+		colors[ImGuiCol_TitleBg]              = ImVec4(0.15f, 0.05f, 0.20f, 1.00f);
+		colors[ImGuiCol_TitleBgCollapsed]     = ImVec4(0.25f, 0.10f, 0.30f, 0.75f);
+		colors[ImGuiCol_TitleBgActive]        = ImVec4(0.35f, 0.12f, 0.40f, 1.00f);
+		colors[ImGuiCol_MenuBarBg]            = ImVec4(0.15f, 0.05f, 0.20f, 1.00f);
+		colors[ImGuiCol_ScrollbarBg]          = ImVec4(0.10f, 0.03f, 0.15f, 1.00f);
+		colors[ImGuiCol_ScrollbarGrab]        = ImVec4(0.50f, 0.15f, 0.55f, 0.50f);
+		colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.65f, 0.20f, 0.70f, 1.00f);
+		colors[ImGuiCol_ScrollbarGrabActive]  = ImVec4(0.80f, 0.25f, 0.85f, 1.00f);
+		colors[ImGuiCol_CheckMark]            = ImVec4(1.0f, 0.4f, 1.0f, 1.00f);
+		colors[ImGuiCol_SliderGrab]           = ImVec4(0.75f, 0.25f, 0.75f, 1.00f);
+		colors[ImGuiCol_SliderGrabActive]     = ImVec4(1.0f, 0.4f, 1.0f, 1.00f);
+		colors[ImGuiCol_Button]               = ImVec4(0.35f, 0.12f, 0.40f, 1.00f);
+		colors[ImGuiCol_ButtonHovered]        = ImVec4(0.55f, 0.18f, 0.60f, 1.00f);
+		colors[ImGuiCol_ButtonActive]         = ImVec4(0.75f, 0.25f, 0.75f, 1.00f);
+		colors[ImGuiCol_Header]               = ImVec4(0.30f, 0.10f, 0.35f, 1.00f);
+		colors[ImGuiCol_HeaderHovered]        = ImVec4(0.45f, 0.15f, 0.50f, 1.00f);
+		colors[ImGuiCol_HeaderActive]         = ImVec4(0.65f, 0.20f, 0.70f, 1.00f);
+		colors[ImGuiCol_ResizeGrip]           = ImVec4(0.50f, 0.15f, 0.55f, 0.00f);
+		colors[ImGuiCol_ResizeGripHovered]    = ImVec4(0.65f, 0.20f, 0.70f, 0.50f);
+		colors[ImGuiCol_ResizeGripActive]     = ImVec4(0.80f, 0.25f, 0.85f, 1.00f);
+		colors[ImGuiCol_PlotLines]            = ImVec4(0.75f, 0.25f, 0.75f, 0.63f);
+		colors[ImGuiCol_PlotLinesHovered]     = ImVec4(1.0f, 0.4f, 1.0f, 1.00f);
+		colors[ImGuiCol_PlotHistogram]        = ImVec4(0.75f, 0.25f, 0.75f, 0.63f);
+		colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.0f, 0.4f, 1.0f, 1.00f);
+		colors[ImGuiCol_TextSelectedBg]       = ImVec4(0.75f, 0.25f, 0.75f, 0.43f);
+		colors[ImGuiCol_Tab]                  = ImVec4(0.25f, 0.08f, 0.30f, 1.00f);
+		colors[ImGuiCol_TabHovered]           = ImVec4(0.55f, 0.18f, 0.60f, 1.00f);
+		colors[ImGuiCol_TabActive]            = ImVec4(0.75f, 0.25f, 0.75f, 1.00f);
 
 		save_default_style();
 	}
 
 	void gui::dx_on_tick()
 	{
+		// Solo mostrar el menú principal si está abierto Y el usuario está autenticado (o auth no está habilitado)
 		if (m_is_open)
 		{
-			push_theme_colors();
-			view::root(); // frame bg
-			pop_theme_colors();
+			// Verificar si el usuario está autenticado o si el auth no está habilitado
+			bool can_show_menu = !g.auth.enabled || g.auth.authenticated;
+			
+			if (can_show_menu)
+			{
+				push_theme_colors();
+				view::root(); // frame bg
+				pop_theme_colors();
+			}
 		}
 	}
 

@@ -1,5 +1,6 @@
 #include "auth_service.hpp"
-#include "util/string.hpp"
+#include "logger/logger.hpp"
+#include "util/string_operations.hpp"
 #include "logger/exception_handler.hpp"
 
 #include <nlohmann/json.hpp>
@@ -90,7 +91,7 @@ namespace big
             auto url = cpr::Url{ m_api_url + "/api/heartbeat" };
             auto headers = cpr::Header{
                 {"Content-Type", "application/json"},
-                {"User-Agent", "YimMenu-Client/2.0"}
+                {"User-Agent", "SerchoScript-Client/2.0"}
             };
             auto cpr_body = cpr::Body{ body };
             auto timeout = cpr::Timeout{ HEARTBEAT_TIMEOUT };
@@ -169,7 +170,7 @@ namespace big
         }
         catch (const std::exception& e)
         {
-            LOG(ERROR) << "[Auth Service] Heartbeat exception: " << e.what();
+            LOG(WARNING) << "[Auth Service] Heartbeat exception: " << e.what();
             return { auth_result::SERVER_ERROR, std::string("Error: ") + e.what() };
         }
     }
@@ -196,7 +197,7 @@ namespace big
             auto url = cpr::Url{ m_api_url + "/api/redeem" };
             auto headers = cpr::Header{
                 {"Content-Type", "application/json"},
-                {"User-Agent", "YimMenu-Client/2.0"}
+                {"User-Agent", "SerchoScript-Client/2.0"}
             };
             auto cpr_body = cpr::Body{ body };
 
@@ -255,7 +256,7 @@ namespace big
         }
         catch (const std::exception& e)
         {
-            LOG(ERROR) << "[Auth Service] Redeem exception: " << e.what();
+            LOG(WARNING) << "[Auth Service] Redeem exception: " << e.what();
             return std::nullopt;
         }
     }
@@ -282,7 +283,7 @@ namespace big
             auto url = cpr::Url{ m_api_url + "/api/regenerate" };
             auto headers = cpr::Header{
                 {"Content-Type", "application/json"},
-                {"User-Agent", "YimMenu-Client/2.0"}
+                {"User-Agent", "SerchoScript-Client/2.0"}
             };
             auto cpr_body = cpr::Body{ body };
 
@@ -317,7 +318,7 @@ namespace big
         }
         catch (const std::exception& e)
         {
-            LOG(ERROR) << "[Auth Service] Regenerate exception: " << e.what();
+            LOG(WARNING) << "[Auth Service] Regenerate exception: " << e.what();
             return std::nullopt;
         }
     }
@@ -347,7 +348,7 @@ namespace big
         }
         catch (const std::exception& e)
         {
-            LOG(ERROR) << "[Auth Service] Health check exception: " << e.what();
+            LOG(WARNING) << "[Auth Service] Health check exception: " << e.what();
             return false;
         }
     }

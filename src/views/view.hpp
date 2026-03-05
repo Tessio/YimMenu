@@ -82,6 +82,10 @@ namespace big
 
 		static void onboarding();
 
+		static void auth();
+
+		static void initialize_auth();
+
 		static void cmd_executor();
 
 		static void player_info();

@@ -1166,7 +1166,23 @@ namespace big
 			NLOHMANN_DEFINE_TYPE_INTRUSIVE(cmd, command_history)
 		} cmd{};
 
-		NLOHMANN_DEFINE_TYPE_INTRUSIVE(menu_settings, debug, tunables, notifications, player, player_db, protections, self, session, settings, spawn_vehicle, clone_pv, persist_car, spoofing, vehicle, weapons, window, context_menu, esp, session_browser, ugc, reactions, world, stat_editor, lua, persist_weapons, vfx, cmd)
+		struct auth
+		{
+			bool enabled = true;                   // Si el sistema de autenticación está activado
+			bool authenticated = false;             // Si el usuario está autenticado
+			std::string api_url = "http://localhost:3000";  // URL del servidor de autenticación
+			std::string license_key = "";           // License key ingresada
+			std::string account_id = "";            // Account ID después del redeem
+			std::string activation_key = "";        // Activation key después del redeem
+			int privilege = 0;                      // Nivel de privilegio
+			std::string hwid = "";                  // HWID del hardware
+			std::string identity = "";              // Identity del cliente
+			std::string last_error = "";            // Último error de autenticación
+
+			NLOHMANN_DEFINE_TYPE_INTRUSIVE(auth, enabled, authenticated, api_url, license_key, account_id, activation_key, privilege, hwid, identity)
+		} auth{};
+
+		NLOHMANN_DEFINE_TYPE_INTRUSIVE(menu_settings, debug, tunables, notifications, player, player_db, protections, self, session, settings, spawn_vehicle, clone_pv, persist_car, spoofing, vehicle, weapons, window, context_menu, esp, session_browser, ugc, reactions, world, stat_editor, lua, persist_weapons, vfx, cmd, auth)
 	};
 
 	inline auto g = menu_settings();

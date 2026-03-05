@@ -49,7 +49,7 @@ namespace big
 			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.f, 0.67f, 0.1f, 1.f));
 
 		if (selected_player)
-			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.29f, 0.45f, 0.69f, 1.f));
+			ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(1.0f, 0.4f, 1.0f, 1.0f));
 
 		ImGui::PushStyleVar(ImGuiStyleVar_ButtonTextAlign, {0.0, 0.5});
 		ImGui::PushID(plyr->id());

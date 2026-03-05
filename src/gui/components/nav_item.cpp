@@ -13,7 +13,7 @@ namespace big
 
 
 		if (current_tab)
-			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.29f, 0.45f, 0.69f, 1.f));
+			ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.4f, 1.0f, 1.0f));
 
 		const char* key = nullptr;
 		if (key = g_translation_service.get_translation(navItem.second.name).data(); !key)

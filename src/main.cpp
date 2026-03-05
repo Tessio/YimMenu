@@ -12,6 +12,8 @@
 #include "renderer/renderer.hpp"
 #include "script_mgr.hpp"
 #include "services/api/api_service.hpp"
+#include "services/auth/auth_service.hpp"
+#include "views/view.hpp"
 #include "services/context_menu/context_menu_service.hpp"
 #include "services/custom_text/custom_text_service.hpp"
 #include "services/gta_data/gta_data_service.hpp"
@@ -186,6 +188,7 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 			    auto hotkey_service_instance            = std::make_unique<hotkey_service>();
 			    auto matchmaking_service_instance       = std::make_unique<matchmaking_service>();
 			    auto api_service_instance               = std::make_unique<api_service>();
+			    auto auth_service_instance              = std::make_unique<auth_service>();
 			    auto tunables_service_instance          = std::make_unique<tunables_service>();
 			    auto script_connection_service_instance = std::make_unique<script_connection_service>();
 			    auto xml_vehicles_service_instance      = std::make_unique<xml_vehicles_service>();
@@ -194,6 +197,10 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 
 			    g_notification_service.initialise();
 			    LOG(INFO) << "Finished initialising services.";
+
+			    // Inicializar sistema de autenticación
+			    view::initialize_auth();
+			    LOG(INFO) << "Auth system initialized.";
 
 			    g_script_mgr.add_script(std::make_unique<script>(&gui::script_func, "GUI", false));
 
@@ -263,6 +270,8 @@ BOOL APIENTRY DllMain(HMODULE hmod, DWORD reason, PVOID)
 			    LOG(INFO) << "Player Database Service reset.";
 			    api_service_instance.reset();
 			    LOG(INFO) << "API Service reset.";
+			    auth_service_instance.reset();
+			    LOG(INFO) << "Auth Service reset.";
 			    script_patcher_service_instance.reset();
 			    LOG(INFO) << "Script Patcher Service reset.";
 			    gui_service_instance.reset();

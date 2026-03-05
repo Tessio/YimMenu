@@ -46,14 +46,32 @@ namespace big
 	void view::onboarding()
 	{
 		static bool onboarding_open = false;
+
+		// No mostrar onboarding hasta que el usuario esté autenticado (o auth deshabilitado)
+		if (!g.auth.authenticated && g.auth.enabled)
+		{
+			return;
+		}
+
 		if (g.settings.onboarding_complete)
 		{
 			return;
 		}
 
+		// Solo mostrar onboarding si el menú ya está abierto
+		if (!g_gui->is_open())
+		{
+			return;
+		}
+
+		// Resetear estado si el popup se cerró
+		if (onboarding_open && !ImGui::IsPopupOpen("ONBOARDING_WELCOME_TITLE"_T.data()))
+		{
+			onboarding_open = false;
+		}
+
 		if (!onboarding_open)
 		{
-			g_gui->toggle(true);
 			ImGui::OpenPopup("ONBOARDING_WELCOME_TITLE"_T.data());
 			onboarding_open = true;
 		}
@@ -74,6 +92,7 @@ namespace big
 			if (ImGui::Button("CLOSE"_T.data()))
 			{
 				g.settings.onboarding_complete = true;
+				onboarding_open = false; // Resetear para la próxima sesión
 				ImGui::CloseCurrentPopup();
 			}
 
